@@ -8,7 +8,7 @@ import javax.swing.JPanel;
 @SuppressWarnings("serial")
 public class Main extends JPanel {
 
-	public static final int SIZE = 512;
+	public static final int SIZE = 768;
 
 	public static void main(String[] args) {
 

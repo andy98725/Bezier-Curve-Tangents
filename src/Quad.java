@@ -23,7 +23,7 @@ public class Quad extends QuadCurve2D.Double {
 		rt += 4 * (a * k - a * l - b * j + b * l + c * j - c * k) * (-a * k + a * y + b * j - b * y - j * z + k * z);
 		if (rt < 0) {
 			return new double[] {};
-		} // TODO needed?
+		}
 
 		double t0 = (base - Math.sqrt(rt)) / div;
 		double t1 = (base + Math.sqrt(rt)) / div;
