@@ -102,8 +102,9 @@ public class Cubic extends CubicCurve2D.Double implements DrawableCurve {
 		// Use flattening approximation
 		for (int i = 1; i < approxPts.size() - 1; i++) {
 			Point2D p = approxPts.get(i), p1 = approxPts.get(i - 1), p2 = approxPts.get(i + 1);
-			if (Util.orientation(x, y, p.getX(), p.getY(), p1.getX(), p1.getY()) == Util.orientation(x, y, p.getX(),
-					p.getY(), p2.getX(), p2.getY())) {
+			double oPrev = Util.orientation(x, y, p.getX(), p.getY(), p1.getX(), p1.getY());
+			double oNext = Util.orientation(x, y, p.getX(), p.getY(), p2.getX(), p2.getY());
+			if (oPrev != oNext && (i == 1 || oPrev != 0)) {
 				// Potential tangent
 				if (ALLOW_INTERSECTING_TANS) {
 					foundPoints.add(p);
