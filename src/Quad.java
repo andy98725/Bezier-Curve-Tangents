@@ -1,10 +1,17 @@
-import java.awt.geom.QuadCurve2D;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.*;
 
 @SuppressWarnings("serial")
 public class Quad extends QuadCurve2D.Double {
 
+	private final boolean isConvex, isConcave;
+
 	public Quad(double x0, double y0, double x1, double y1, double x2, double y2) {
 		super(x0, y0, x1, y1, x2, y2);
+		isConvex = Util.orientation(x0, y0, x1, y1, x2, y2) > 0;
+		isConcave = Util.orientation(x0, y0, x1, y1, x2, y2) < 0;
+
 	}
 
 	public double[] getTangentPoints(double z, double y) {
@@ -45,5 +52,18 @@ public class Quad extends QuadCurve2D.Double {
 	private double[] eval(double t) {
 		return new double[] { (1 - t) * (1 - t) * x1 + 2 * t * (1 - t) * ctrlx + t * t * x2,
 				(1 - t) * (1 - t) * y1 + 2 * t * (1 - t) * ctrly + t * t * y2 };
+	}
+
+	public void draw(Graphics2D g) {
+		if (isConvex) {
+			g.setColor(new Color(255, 127, 127));
+			g.fill(this);
+		}
+		if (isConcave) {
+			g.setColor(new Color(127, 127, 255));
+			g.fill(this);
+		}
+		g.setColor(Color.BLACK);
+		g.draw(this);
 	}
 }

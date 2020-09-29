@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -26,6 +27,7 @@ public class Main extends JPanel {
 	}
 
 	private Quad curve;
+	private final ArrayList<Point2D> points = new ArrayList<Point2D>();
 
 	private int mx, my;
 
@@ -39,8 +41,7 @@ public class Main extends JPanel {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				generateCurve();
-				repaint();
+				placePoint(e.getX(), e.getY());
 			}
 
 			@Override
@@ -58,12 +59,28 @@ public class Main extends JPanel {
 		addMouseMotionListener(new MouseMotionListener() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				mouseInput(e.getX(), e.getY());
+				updatePoint(e.getX(), e.getY());
 			}
 
 			@Override
 			public void mouseMoved(MouseEvent e) {
 				mouseInput(e.getX(), e.getY());
+			}
+		});
+		setFocusable(true);
+		addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				keyInput(e.getKeyCode());
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
 			}
 		});
 	}
@@ -74,37 +91,69 @@ public class Main extends JPanel {
 		repaint();
 	}
 
+	private void keyInput(int keyC) {
+		if (keyC == KeyEvent.VK_SPACE) {
+			points.clear();
+			generateCurve();
+		}
+	}
+
+	private void placePoint(int x, int y) {
+		if (points.size() < 3) {
+			points.add(new Point2D.Double(x, y));
+			generateCurve();
+		}
+	}
+
+	private void updatePoint(int x, int y) {
+		if (points.size() > 0)
+			points.remove(points.size() - 1);
+
+		placePoint(x, y);
+	}
+
 	@Override
 	public void paint(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
+		g.setStroke(new BasicStroke(3));
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, SIZE, SIZE);
 
 		// Curve
-		g.setColor(Color.BLACK);
-		g.setStroke(new BasicStroke(3));
-		g.draw(curve);
+		if (curve != null) {
+			curve.draw(g);
+		}
 
 		// Mouse
 		g.drawLine(mx, my, mx, my);
 
 		// Tangents
-		g.setColor(Color.BLUE);
-		g.setStroke(new BasicStroke(1));
-		double[] points = curve.getTangentPoints(mx, my);
-		for (int i = 0; i < points.length; i += 2) {
-			g.drawLine(mx, my, (int) Math.round(points[i]), (int) Math.round(points[i + 1]));
+		if (curve != null) {
+			g.setColor(Color.BLUE);
+			g.setStroke(new BasicStroke(1));
+			double[] points = curve.getTangentPoints(mx, my);
+			for (int i = 0; i < points.length; i += 2) {
+				g.drawLine(mx, my, (int) Math.round(points[i]), (int) Math.round(points[i + 1]));
+			}
 		}
 
 	}
 
-	private static final int BOR = 32;
+//	private static final int BOR = 32;
 
 	private void generateCurve() {
-		Random r = new Random();
-		curve = new Quad(BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR),
-				BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR),
-				BOR + r.nextInt(SIZE - 2 * BOR));
+//		Random r = new Random();
+//		curve = new Quad(BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR),
+//				BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR),
+//				BOR + r.nextInt(SIZE - 2 * BOR));
+		if (points.size() >= 3) {
+			Point2D p0 = points.get(0), p1 = points.get(1), p2 = points.get(2);
+			curve = new Quad(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY());
+		}
+		else {
+			curve = null;
+		}
+		repaint();
 	}
 
 }
