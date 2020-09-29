@@ -26,7 +26,7 @@ public class Main extends JPanel {
 		app.setVisible(true);
 	}
 
-	private Quad curve;
+	private DrawableCurve curve;
 	private final ArrayList<Point2D> points = new ArrayList<Point2D>();
 
 	private int mx, my;
@@ -41,7 +41,10 @@ public class Main extends JPanel {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				placePoint(e.getX(), e.getY());
+				if (e.getButton() == MouseEvent.BUTTON1)
+					placePoint(e.getX(), e.getY());
+				else if (e.getButton() == MouseEvent.BUTTON3)
+					clearPoints();
 			}
 
 			@Override
@@ -93,13 +96,17 @@ public class Main extends JPanel {
 
 	private void keyInput(int keyC) {
 		if (keyC == KeyEvent.VK_SPACE) {
-			points.clear();
-			generateCurve();
+			clearPoints();
 		}
 	}
 
+	private void clearPoints() {
+		points.clear();
+		generateCurve();
+	}
+
 	private void placePoint(int x, int y) {
-		if (points.size() < 3) {
+		if (points.size() < 4) {
 			points.add(new Point2D.Double(x, y));
 			generateCurve();
 		}
@@ -119,12 +126,20 @@ public class Main extends JPanel {
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, SIZE, SIZE);
 
+		// Points
+		g.setColor(Color.GRAY);
+		for (Point2D p : points) {
+			int x = (int) Math.round(p.getX()), y = (int) Math.round(p.getY());
+			g.drawLine(x, y, x, y);
+		}
+
 		// Curve
 		if (curve != null) {
 			curve.draw(g);
 		}
 
 		// Mouse
+		g.setColor(Color.BLACK);
 		g.drawLine(mx, my, mx, my);
 
 		// Tangents
@@ -139,18 +154,14 @@ public class Main extends JPanel {
 
 	}
 
-//	private static final int BOR = 32;
-
 	private void generateCurve() {
-//		Random r = new Random();
-//		curve = new Quad(BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR),
-//				BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR), BOR + r.nextInt(SIZE - 2 * BOR),
-//				BOR + r.nextInt(SIZE - 2 * BOR));
-		if (points.size() >= 3) {
+		if (points.size() == 3) {
 			Point2D p0 = points.get(0), p1 = points.get(1), p2 = points.get(2);
 			curve = new Quad(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY());
-		}
-		else {
+		} else if (points.size() >= 4) {
+			Point2D p0 = points.get(0), p1 = points.get(1), p2 = points.get(2), p3 = points.get(3);
+			curve = new Cubic(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
+		} else {
 			curve = null;
 		}
 		repaint();

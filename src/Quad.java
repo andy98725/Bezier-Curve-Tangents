@@ -1,9 +1,9 @@
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.geom.*;
+import java.awt.geom.QuadCurve2D;
 
 @SuppressWarnings("serial")
-public class Quad extends QuadCurve2D.Double {
+public class Quad extends QuadCurve2D.Double implements DrawableCurve {
 
 	private final boolean isConvex, isConcave;
 
@@ -14,7 +14,7 @@ public class Quad extends QuadCurve2D.Double {
 
 	}
 
-	public double[] getTangentPoints(double z, double y) {
+	public double[] getTangentPoints(double x, double y) {
 		final double a = x1, b = ctrlx, c = x2;
 		final double j = y1, k = ctrly, l = y2;
 
@@ -24,10 +24,10 @@ public class Quad extends QuadCurve2D.Double {
 			return new double[] {};
 		}
 
-		double base = 2 * a * k - a * l - a * y - 2 * b * j + 2 * b * y + c * j - c * y + j * z - 2 * k * z + l * z;
+		double base = 2 * a * k - a * l - a * y - 2 * b * j + 2 * b * y + c * j - c * y + j * x - 2 * k * x + l * x;
 		double rt = Math
-				.pow(2 * a * k - a * l - a * y - 2 * b * j + 2 * b * y + c * j - c * y + j * z - 2 * k * z + l * z, 2);
-		rt += 4 * (a * k - a * l - b * j + b * l + c * j - c * k) * (-a * k + a * y + b * j - b * y - j * z + k * z);
+				.pow(2 * a * k - a * l - a * y - 2 * b * j + 2 * b * y + c * j - c * y + j * x - 2 * k * x + l * x, 2);
+		rt += 4 * (a * k - a * l - b * j + b * l + c * j - c * k) * (-a * k + a * y + b * j - b * y - j * x + k * x);
 		if (rt < 0) {
 			return new double[] {};
 		}
@@ -49,11 +49,6 @@ public class Quad extends QuadCurve2D.Double {
 		return ret;
 	}
 
-	private double[] eval(double t) {
-		return new double[] { (1 - t) * (1 - t) * x1 + 2 * t * (1 - t) * ctrlx + t * t * x2,
-				(1 - t) * (1 - t) * y1 + 2 * t * (1 - t) * ctrly + t * t * y2 };
-	}
-
 	public void draw(Graphics2D g) {
 		if (isConvex) {
 			g.setColor(new Color(255, 127, 127));
@@ -65,5 +60,10 @@ public class Quad extends QuadCurve2D.Double {
 		}
 		g.setColor(Color.BLACK);
 		g.draw(this);
+	}
+
+	private double[] eval(double t) {
+		return new double[] { (1 - t) * (1 - t) * x1 + 2 * t * (1 - t) * ctrlx + t * t * x2,
+				(1 - t) * (1 - t) * y1 + 2 * t * (1 - t) * ctrly + t * t * y2 };
 	}
 }
