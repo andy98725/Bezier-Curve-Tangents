@@ -14,7 +14,7 @@ public class Main extends JPanel {
 	public static void main(String[] args) {
 
 		JFrame app = new JFrame();
-		app.setTitle("My app");
+		app.setTitle("Bezier Curves");
 		app.setSize(SIZE, SIZE);
 		app.setResizable(false);
 		app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -62,6 +62,7 @@ public class Main extends JPanel {
 		addMouseMotionListener(new MouseMotionListener() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON1)
 				updatePoint(e.getX(), e.getY());
 			}
 

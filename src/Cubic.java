@@ -9,6 +9,8 @@ public class Cubic extends CubicCurve2D.Double implements DrawableCurve {
 	// How flat should it approximate? (1 = 1 px)
 	private static final double FLATNESS = 1;
 
+	private static final boolean ALLOW_INTERSECTING_TANS = true;
+
 	private final CubicCurve2D convexCurve, concaveCurve;
 
 	private final ArrayList<Point2D> approxPts;
@@ -102,7 +104,36 @@ public class Cubic extends CubicCurve2D.Double implements DrawableCurve {
 			Point2D p = approxPts.get(i), p1 = approxPts.get(i - 1), p2 = approxPts.get(i + 1);
 			if (Util.orientation(x, y, p.getX(), p.getY(), p1.getX(), p1.getY()) == Util.orientation(x, y, p.getX(),
 					p.getY(), p2.getX(), p2.getY())) {
-				foundPoints.add(p);
+				// Potential tangent
+				if (ALLOW_INTERSECTING_TANS) {
+					foundPoints.add(p);
+				} else {
+					// Detect any crosses
+					Point2D p3 = approxPts.get(0);
+					boolean allow = true;
+					for (int j = 0; allow && j < i; j++) {
+						Point2D p4 = approxPts.get(j);
+						if (Util.orientation(x, y, p.getX(), p.getY(), p3.getX(), p3.getY()) != Util.orientation(x, y,
+								p.getX(), p.getY(), p4.getX(), p4.getY())
+								&& Util.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), x, y) != Util
+										.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), p.getX(), p.getY())) {
+							allow = false;
+						}
+					}
+					p3 = approxPts.get(approxPts.size() - 1);
+					for (int j = i + 1; allow && j < approxPts.size(); j++) {
+						Point2D p4 = approxPts.get(j);
+						if (Util.orientation(x, y, p.getX(), p.getY(), p3.getX(), p3.getY()) != Util.orientation(x, y,
+								p.getX(), p.getY(), p4.getX(), p4.getY())
+								&& Util.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), x, y) != Util
+										.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), p.getX(), p.getY())) {
+							allow = false;
+						}
+					}
+					if (allow) {
+						foundPoints.add(p);
+					}
+				}
 			}
 		}
 		// Convert to primitive

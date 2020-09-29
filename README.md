@@ -30,3 +30,9 @@ Compile src/Main.java and run it. It should create a window.
 
 With the application running, left click to place points for the Bezier curve.
 Move the mouse around to view tangents to the curve. Right click or spacebar to clear the curve.
+
+# Examples
+
+![Sample image](./sample.png)
+
+![Sample gif](./bezierLooped.gif)
