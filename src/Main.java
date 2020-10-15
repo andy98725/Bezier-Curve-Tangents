@@ -150,8 +150,31 @@ public class Main extends JPanel {
 		g.setColor(Color.BLACK);
 		g.drawLine(mx, my, mx, my);
 
-		// Tangents
-		if (curve1 != null) {
+		if (curve2 != null) {
+			// Curve on curve tangent
+			g.setColor(Color.GREEN);
+			g.setStroke(new BasicStroke(1));
+			double[] points = curve1.getTangentLines(curve2);
+			for (int i = 0; i < points.length; i += 4) {
+				g.drawLine((int) Math.round(points[i]), (int) Math.round(points[i + 1]),
+						(int) Math.round(points[i + 2]), (int) Math.round(points[i + 3]));
+			}
+
+			// (optional) both point on curve tangent sets
+			if (DRAW_BOTH_MOUSE_TANGENTS) {
+				g.setColor(Color.BLUE);
+				points = curve1.getTangentPoints(mx, my);
+				for (int i = 0; i < points.length; i += 2) {
+					g.drawLine(mx, my, (int) Math.round(points[i]), (int) Math.round(points[i + 1]));
+				}
+				points = curve2.getTangentPoints(mx, my);
+				for (int i = 0; i < points.length; i += 2) {
+					g.drawLine(mx, my, (int) Math.round(points[i]), (int) Math.round(points[i + 1]));
+				}
+
+			}
+		} else if (curve1 != null) {
+			// Point on curve tangent
 			g.setColor(Color.BLUE);
 			g.setStroke(new BasicStroke(1));
 			double[] points = curve1.getTangentPoints(mx, my);
@@ -159,6 +182,8 @@ public class Main extends JPanel {
 				g.drawLine(mx, my, (int) Math.round(points[i]), (int) Math.round(points[i + 1]));
 			}
 		}
+
+		// Display FPS
 		fps.stopTiming();
 		fps.drawFPS(g);
 

@@ -7,9 +7,9 @@ import java.util.ArrayList;
 public class Cubic extends CubicCurve2D.Double implements DrawableCurve {
 
 	// How flat should it approximate? (1 = 1 px)
-	private static final double FLATNESS = 1;
+	protected static final double FLATNESS = 1;
 
-	private static final boolean ALLOW_INTERSECTING_TANS = false;
+	protected static final boolean ALLOW_INTERSECTING_TANS = false;
 
 	private final CubicCurve2D convexCurve, concaveCurve;
 
@@ -96,45 +96,30 @@ public class Cubic extends CubicCurve2D.Double implements DrawableCurve {
 		}
 	}
 
+	protected static Color CONVEX = new Color(255, 127, 127);
+	protected static Color CONCAVE = new Color(127, 127, 255);
+
+	public void draw(Graphics2D g) {
+		if (convexCurve != null) {
+			g.setColor(CONVEX);
+			g.fill(convexCurve);
+		}
+		if (concaveCurve != null) {
+			g.setColor(CONCAVE);
+			g.fill(concaveCurve);
+		}
+		g.setColor(Color.BLACK);
+		g.draw(this);
+
+	}
+
 	public double[] getTangentPoints(double x, double y) {
 		ArrayList<Point2D> foundPoints = new ArrayList<Point2D>();
 
 		// Use flattening approximation
 		for (int i = 1; i < approxPts.size() - 1; i++) {
-			Point2D p = approxPts.get(i), p1 = approxPts.get(i - 1), p2 = approxPts.get(i + 1);
-			double oPrev = Util.orientation(x, y, p.getX(), p.getY(), p1.getX(), p1.getY());
-			double oNext = Util.orientation(x, y, p2.getX(), p2.getY(), p.getX(), p.getY());
-			if (oPrev != oNext && (i == 1 || oPrev != 0)) {
-				// Potential tangent
-				if (ALLOW_INTERSECTING_TANS) {
-					foundPoints.add(p);
-				} else {
-					// Detect any crosses
-					Point2D p3 = approxPts.get(0);
-					boolean allow = true;
-					for (int j = 0; allow && j < i; j++) {
-						Point2D p4 = approxPts.get(j);
-						if (Util.orientation(x, y, p.getX(), p.getY(), p3.getX(), p3.getY()) != Util.orientation(x, y,
-								p.getX(), p.getY(), p4.getX(), p4.getY())
-								&& Util.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), x, y) != Util
-										.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), p.getX(), p.getY())) {
-							allow = false;
-						}
-					}
-					p3 = approxPts.get(approxPts.size() - 1);
-					for (int j = i + 1; allow && j < approxPts.size(); j++) {
-						Point2D p4 = approxPts.get(j);
-						if (Util.orientation(x, y, p.getX(), p.getY(), p3.getX(), p3.getY()) != Util.orientation(x, y,
-								p.getX(), p.getY(), p4.getX(), p4.getY())
-								&& Util.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), x, y) != Util
-										.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), p.getX(), p.getY())) {
-							allow = false;
-						}
-					}
-					if (allow) {
-						foundPoints.add(p);
-					}
-				}
+			if (testTangent(i, x, y)) {
+				foundPoints.add(approxPts.get(i));
 			}
 		}
 		// Convert to primitive
@@ -146,18 +131,76 @@ public class Cubic extends CubicCurve2D.Double implements DrawableCurve {
 		return ret;
 	}
 
-	public void draw(Graphics2D g) {
-		if (convexCurve != null) {
-			g.setColor(new Color(255, 127, 127));
-			g.fill(convexCurve);
+	private boolean testTangent(int i, double x, double y) {
+		Point2D p = approxPts.get(i), p1 = approxPts.get(i - 1), p2 = approxPts.get(i + 1);
+		double oPrev = Util.orientation(x, y, p.getX(), p.getY(), p1.getX(), p1.getY());
+		double oNext = Util.orientation(x, y, p2.getX(), p2.getY(), p.getX(), p.getY());
+		if (oPrev != oNext && (i == 1 || oPrev != 0)) {
+			// Potential tangent
+			if (ALLOW_INTERSECTING_TANS) {
+				return true;
+			} else {
+				// Detect any crosses
+				Point2D p3 = approxPts.get(0);
+				boolean allow = true;
+				for (int j = 0; allow && j < i; j++) {
+					Point2D p4 = approxPts.get(j);
+					if (Util.orientation(x, y, p.getX(), p.getY(), p3.getX(), p3.getY()) != Util.orientation(x, y,
+							p.getX(), p.getY(), p4.getX(), p4.getY())
+							&& Util.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), x, y) != Util
+									.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), p.getX(), p.getY())) {
+						allow = false;
+					}
+				}
+				p3 = approxPts.get(approxPts.size() - 1);
+				for (int j = i + 1; allow && j < approxPts.size(); j++) {
+					Point2D p4 = approxPts.get(j);
+					if (Util.orientation(x, y, p.getX(), p.getY(), p3.getX(), p3.getY()) != Util.orientation(x, y,
+							p.getX(), p.getY(), p4.getX(), p4.getY())
+							&& Util.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), x, y) != Util
+									.orientation(p3.getX(), p3.getY(), p4.getX(), p4.getY(), p.getX(), p.getY())) {
+						allow = false;
+					}
+				}
+				if (allow) {
+					return true;
+				}
+			}
 		}
-		if (concaveCurve != null) {
-			g.setColor(new Color(127, 127, 255));
-			g.fill(concaveCurve);
-		}
-		g.setColor(Color.BLACK);
-		g.draw(this);
+		return false;
+	}
 
+	// Do through rough approximation
+	@Override
+	public double[] getTangentLines(DrawableCurve other) {
+		ArrayList<Point2D> foundPoints = new ArrayList<Point2D>();
+		ArrayList<Point2D> otherPoints = new ArrayList<Point2D>();
+
+		// Brute force each point
+		for (int i = 1; i < approxPts.size() - 1; i++) {
+			Point2D p = approxPts.get(i);
+			double[] tans = other.getTangentPoints(p.getX(), p.getY());
+			// Test tangent back
+			for (int j = 0; j < tans.length; j += 2) {
+				if (testTangent(i, tans[j], tans[j + 1])) {
+					foundPoints.add(p);
+					otherPoints.add(new Point2D.Double(tans[j], tans[j + 1]));
+				}
+
+			}
+		}
+
+		// Combine into an array of lines
+		double[] allLines = new double[foundPoints.size() * 4];
+		for (int i = 0; i < foundPoints.size(); i++) {
+			Point2D p = foundPoints.get(i);
+			Point2D p2 = otherPoints.get(i);
+			allLines[4 * i] = p.getX();
+			allLines[4 * i + 1] = p.getY();
+			allLines[4 * i + 2] = p2.getX();
+			allLines[4 * i + 3] = p2.getY();
+		}
+		return allLines;
 	}
 
 //	private double[] eval(double t) {
