@@ -11,6 +11,8 @@ public class Main extends JPanel {
 
 	public static final int SIZE = 768;
 
+	private static final boolean DRAW_BOTH_MOUSE_TANGENTS = false;
+
 	public static void main(String[] args) {
 
 		JFrame app = new JFrame();
@@ -26,10 +28,11 @@ public class Main extends JPanel {
 		app.setVisible(true);
 	}
 
-	private DrawableCurve curve;
+	private DrawableCurve curve1, curve2;
 	private final ArrayList<Point2D> points = new ArrayList<Point2D>();
 
 	private int mx, my;
+	private final FPSTracker fps = new FPSTracker(12);
 
 	private Main() {
 		generateCurve();
@@ -63,7 +66,7 @@ public class Main extends JPanel {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1)
-				updatePoint(e.getX(), e.getY());
+					updatePoint(e.getX(), e.getY());
 			}
 
 			@Override
@@ -107,7 +110,7 @@ public class Main extends JPanel {
 	}
 
 	private void placePoint(int x, int y) {
-		if (points.size() < 4) {
+		if (points.size() < 8) {
 			points.add(new Point2D.Double(x, y));
 			generateCurve();
 		}
@@ -122,6 +125,7 @@ public class Main extends JPanel {
 
 	@Override
 	public void paint(Graphics graphics) {
+		fps.startTiming();
 		Graphics2D g = (Graphics2D) graphics;
 		g.setStroke(new BasicStroke(3));
 		g.setColor(Color.WHITE);
@@ -134,9 +138,12 @@ public class Main extends JPanel {
 			g.drawLine(x, y, x, y);
 		}
 
-		// Curve
-		if (curve != null) {
-			curve.draw(g);
+		// Curves
+		if (curve1 != null) {
+			curve1.draw(g);
+		}
+		if (curve2 != null) {
+			curve2.draw(g);
 		}
 
 		// Mouse
@@ -144,26 +151,46 @@ public class Main extends JPanel {
 		g.drawLine(mx, my, mx, my);
 
 		// Tangents
-		if (curve != null) {
+		if (curve1 != null) {
 			g.setColor(Color.BLUE);
 			g.setStroke(new BasicStroke(1));
-			double[] points = curve.getTangentPoints(mx, my);
+			double[] points = curve1.getTangentPoints(mx, my);
 			for (int i = 0; i < points.length; i += 2) {
 				g.drawLine(mx, my, (int) Math.round(points[i]), (int) Math.round(points[i + 1]));
 			}
 		}
+		fps.stopTiming();
+		fps.drawFPS(g);
 
 	}
 
 	private void generateCurve() {
-		if (points.size() == 3) {
+		if (points.size() >= 8) {
+			Point2D p0 = points.get(0), p1 = points.get(1), p2 = points.get(2), p3 = points.get(3);
+			Point2D p4 = points.get(4), p5 = points.get(5), p6 = points.get(6), p7 = points.get(7);
+			curve1 = new Cubic(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
+			curve2 = new Cubic(p4.getX(), p4.getY(), p5.getX(), p5.getY(), p6.getX(), p6.getY(), p7.getX(), p7.getY());
+		} else if (points.size() == 7) {
+			Point2D p0 = points.get(0), p1 = points.get(1), p2 = points.get(2), p3 = points.get(3);
+			Point2D p4 = points.get(4), p5 = points.get(5), p6 = points.get(6);
+			curve1 = new Cubic(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
+			curve2 = new Quad(p4.getX(), p4.getY(), p5.getX(), p5.getY(), p6.getX(), p6.getY());
+		} else if (points.size() == 6) {
 			Point2D p0 = points.get(0), p1 = points.get(1), p2 = points.get(2);
-			curve = new Quad(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY());
+			Point2D p3 = points.get(3), p4 = points.get(4), p5 = points.get(5);
+			curve1 = new Quad(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY());
+			curve2 = new Quad(p3.getX(), p3.getY(), p4.getX(), p4.getY(), p5.getX(), p5.getY());
 		} else if (points.size() >= 4) {
 			Point2D p0 = points.get(0), p1 = points.get(1), p2 = points.get(2), p3 = points.get(3);
-			curve = new Cubic(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
+			curve1 = new Cubic(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
+			curve2 = null;
+		} else if (points.size() == 3) {
+			Point2D p0 = points.get(0), p1 = points.get(1), p2 = points.get(2);
+			curve1 = new Quad(p0.getX(), p0.getY(), p1.getX(), p1.getY(), p2.getX(), p2.getY());
+			curve2 = null;
 		} else {
-			curve = null;
+			curve1 = null;
+			curve2 = null;
 		}
 		repaint();
 	}
